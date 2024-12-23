@@ -26,6 +26,9 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
+    // swagger
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+
     // db
     runtimeOnly("com.h2database:h2")
 
