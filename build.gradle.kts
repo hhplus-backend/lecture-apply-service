@@ -30,13 +30,14 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
 
     // db
-    runtimeOnly("com.h2database:h2")
+    testRuntimeOnly("com.h2database:h2")
+    runtimeOnly("com.mysql:mysql-connector-j")
 
     // test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-//    testImplementation("org.springframework.boot:spring-boot-testcontainers")
-//    testImplementation("org.testcontainers:mariadb")
+    testImplementation("org.springframework.boot:spring-boot-testcontainers")
+    testImplementation("org.testcontainers:mysql")
 
     // Kotest 의존성
     testImplementation("io.kotest:kotest-runner-junit5:5.7.2")
