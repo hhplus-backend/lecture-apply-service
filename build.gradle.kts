@@ -74,3 +74,9 @@ val installLocalGitHook =
             mode = "755".toInt(radix = 8)
         }
     }
+
+configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+    filter {
+        exclude("**/jpa/**")
+    }
+}
