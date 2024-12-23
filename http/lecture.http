@@ -1,0 +1,16 @@
+### 변수 설정
+@lectureId = 1
+@userId = 1
+@date = 2024-12-22
+
+### 수강신청
+POST http://localhost:8080/api/lectures/{{lectureId}}/apply?
+    userId={{userId}}
+
+### 특강 선택 API
+GET http://localhost:8080/api/lectures?
+    date={{date}}
+
+### 특강 신청 완료 목록 조회 API
+GET http://localhost:8080/api/lectures/applied?
+    userId={{userId}}
