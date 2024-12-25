@@ -5,6 +5,7 @@ import io.hhplus.lectureapplyservice.common.response.ErrorResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.FieldError
 import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
@@ -17,6 +18,12 @@ class GlobalExceptionHandler {
                 (it as FieldError).field to it.defaultMessage
             }
         return ResponseEntity.badRequest().body(errors)
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException::class)
+    fun handleValidationExceptions(ex: MissingServletRequestParameterException): ResponseEntity<ErrorResponse<String>> {
+        val errorResponse = ErrorResponse.of(ex.message, ErrorCode.FAIL)
+        return ResponseEntity.badRequest().body(errorResponse)
     }
 
     @ExceptionHandler(Exception::class)
