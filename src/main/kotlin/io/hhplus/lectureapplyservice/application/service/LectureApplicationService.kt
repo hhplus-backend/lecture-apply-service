@@ -29,6 +29,9 @@ class LectureApplicationService(
                 if (!lecture.hasCapacity()) {
                     return false
                 }
+                if (lecture.hasUserApplied(user)) {
+                    return false
+                }
 
                 val lectureApplication =
                     LectureApplication(

@@ -103,6 +103,15 @@ fun applyForLecture(
 ### **`STEP 3`**
 - 서비스 수준의 동시성 테스트 : `LectureApplicationServiceConcurrencyTest`
 - 통합테스트 : `LectureFacadeTest`
+
+### **`STEP 4`**
+- 같은 사용자가 동일한 특강에 대해 신청 성공하지 못하도록 개선 => commitId :
+- 서비스 수준의 동시성 테스트 : `LectureApplicationServiceConcurrencyTest`
+- 통합테스트 : `LectureFacadeTest
+ 
+
+- 동일한 유저 정보로 같은 특강을 5번 신청했을 때, 1번만 성공하는 것을 검증하는 **통합 테스트** 작성
+
 [ktlint]: https://github.com/JLLeitschuh/ktlint-gradle?tab=readme-ov-file#configuration
 
 [kotest]: https://kotest.io/docs/quickstart

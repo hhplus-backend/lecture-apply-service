@@ -20,6 +20,7 @@ class User(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Comment("id")
     val id: Long = 0L,
+    // val id: Long? = null, // id를 nullable로 변경
     @Column(nullable = false, unique = true)
     @Comment("사용자 이름")
     val name: String,

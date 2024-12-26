@@ -1,6 +1,7 @@
 package io.hhplus.lectureapplyservice.domain.lecture
 
 import io.hhplus.lectureapplyservice.config.ClockConfig
+import io.hhplus.lectureapplyservice.domain.lecture.exception.LectureAlreadyAppliedException
 import io.hhplus.lectureapplyservice.domain.lecture.exception.LectureFullException
 import io.hhplus.lectureapplyservice.domain.user.User
 import io.kotest.assertions.throwables.shouldThrow
@@ -120,6 +121,36 @@ class LectureTest(
             val exception =
                 shouldThrow<LectureFullException> {
                     lecture.hasCapacity()
+                }
+        }
+
+        test("hasUserApplied는 사용자가 신청하지 않았을 경우 false를 리턴한다.") {
+            val user =
+                User(
+                    id = 1L,
+                    name = "User1",
+                )
+
+            lecture.hasUserApplied(user) shouldBe false
+        }
+
+        test("hasUserApplied는 사용자가 신청했을 경우 LectureAlreadyAppliedException을 발생시킨다.") {
+            val user =
+                User(
+                    id = 1L,
+                    name = "User1",
+                )
+
+            val application =
+                LectureApplication(
+                    lecture = lecture,
+                    participant = user,
+                )
+            (lecture.lectureApplications as MutableList).add(application)
+
+            val exception =
+                shouldThrow<LectureAlreadyAppliedException> {
+                    lecture.hasUserApplied(user)
                 }
         }
     })
