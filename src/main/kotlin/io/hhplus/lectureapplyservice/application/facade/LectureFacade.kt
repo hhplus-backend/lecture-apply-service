@@ -21,20 +21,21 @@ class LectureFacade(
         lectureId: Long,
         userId: Long,
     ): Boolean {
-        TODO()
+        val user = userService.getUser(userId)
+        return lectureApplicationService.applyForLecture(lectureId, user)
     }
 
     fun getAvailableLectures(
         request: LectureSearchRequest,
         pageable: Pageable,
     ): Page<LectureResponse> {
-        TODO()
+        return lectureService.getAvailableLectures(request, pageable)
     }
 
     fun getAppliedLectures(
         userId: Long,
         pageable: Pageable,
     ): Page<LectureResponse> {
-        TODO()
+        return lectureApplicationService.getAppliedLectures(userId, pageable)
     }
 }
