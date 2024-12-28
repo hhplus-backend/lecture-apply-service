@@ -9,11 +9,11 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import org.hibernate.annotations.Comment
 
 @Entity
-// @Table(name = "lecture_applications", uniqueConstraints = [UniqueConstraint(columnNames = ["lecture_id", "user_id"])])
-@Table(name = "lecture_applications")
+@Table(name = "lecture_applications", uniqueConstraints = [UniqueConstraint(columnNames = ["lecture_id", "user_id"])])
 @Comment("강의신청내역")
 class LectureApplication(
     @Id
