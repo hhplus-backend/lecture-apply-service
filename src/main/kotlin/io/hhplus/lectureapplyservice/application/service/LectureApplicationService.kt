@@ -2,6 +2,8 @@ package io.hhplus.lectureapplyservice.application.service
 
 import io.hhplus.lectureapplyservice.application.dto.response.LectureResponse
 import io.hhplus.lectureapplyservice.domain.lecture.LectureApplication
+import io.hhplus.lectureapplyservice.domain.lecture.exception.LectureAlreadyAppliedException
+import io.hhplus.lectureapplyservice.domain.lecture.exception.LectureFullException
 import io.hhplus.lectureapplyservice.domain.lecture.extension.toResponse
 import io.hhplus.lectureapplyservice.domain.lecture.repository.LectureApplicationRepository
 import io.hhplus.lectureapplyservice.domain.lecture.repository.LectureRepository
@@ -27,10 +29,11 @@ class LectureApplicationService(
             try {
                 val lecture = lectureRepository.getLectureById(lectureId)
                 if (!lecture.hasCapacity()) {
-                    return false
+                    throw LectureFullException(lecture.id)
                 }
+
                 if (lecture.hasUserApplied(user)) {
-                    return false
+                    throw LectureAlreadyAppliedException(user.id, lecture.id)
                 }
 
                 val lectureApplication =

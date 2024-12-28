@@ -1,8 +1,6 @@
 package io.hhplus.lectureapplyservice.domain.lecture
 
 import io.hhplus.lectureapplyservice.common.BaseEntity
-import io.hhplus.lectureapplyservice.domain.lecture.exception.LectureAlreadyAppliedException
-import io.hhplus.lectureapplyservice.domain.lecture.exception.LectureFullException
 import io.hhplus.lectureapplyservice.domain.user.User
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
@@ -43,10 +41,7 @@ class Lecture(
     }
 
     fun hasCapacity(): Boolean {
-        if (getRemaining() <= 0) {
-            throw LectureFullException(this.id)
-        }
-        return true
+        return getRemaining() > 0
     }
 
     fun getRemaining(): Int {
@@ -54,8 +49,6 @@ class Lecture(
     }
 
     fun hasUserApplied(user: User): Boolean {
-        lectureApplications.firstOrNull { it.participant.id == user.id }
-            ?: return false
-        throw LectureAlreadyAppliedException(user.id, id)
+        return lectureApplications.any { it.participant.id == user.id }
     }
 }
