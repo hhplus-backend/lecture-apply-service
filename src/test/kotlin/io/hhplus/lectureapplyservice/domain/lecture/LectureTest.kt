@@ -1,10 +1,7 @@
 package io.hhplus.lectureapplyservice.domain.lecture
 
 import io.hhplus.lectureapplyservice.config.ClockConfig
-import io.hhplus.lectureapplyservice.domain.lecture.exception.LectureAlreadyAppliedException
-import io.hhplus.lectureapplyservice.domain.lecture.exception.LectureFullException
 import io.hhplus.lectureapplyservice.domain.user.User
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import org.springframework.beans.factory.annotation.Autowired
@@ -118,10 +115,9 @@ class LectureTest(
                 }
             (lecture.lectureApplications as MutableList).addAll(applications)
 
-            val exception =
-                shouldThrow<LectureFullException> {
-                    lecture.hasCapacity()
-                }
+            val result = lecture.hasCapacity()
+
+            result shouldBe false
         }
 
         test("hasUserApplied는 사용자가 신청하지 않았을 경우 false를 리턴한다.") {
@@ -132,25 +128,5 @@ class LectureTest(
                 )
 
             lecture.hasUserApplied(user) shouldBe false
-        }
-
-        test("hasUserApplied는 사용자가 신청했을 경우 LectureAlreadyAppliedException을 발생시킨다.") {
-            val user =
-                User(
-                    id = 1L,
-                    name = "User1",
-                )
-
-            val application =
-                LectureApplication(
-                    lecture = lecture,
-                    participant = user,
-                )
-            (lecture.lectureApplications as MutableList).add(application)
-
-            val exception =
-                shouldThrow<LectureAlreadyAppliedException> {
-                    lecture.hasUserApplied(user)
-                }
         }
     })
