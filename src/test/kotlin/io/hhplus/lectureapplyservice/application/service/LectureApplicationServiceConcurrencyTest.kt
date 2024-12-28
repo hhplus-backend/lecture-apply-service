@@ -1,6 +1,8 @@
 package io.hhplus.lectureapplyservice.application.service
 
 import io.hhplus.lectureapplyservice.domain.lecture.Lecture
+import io.hhplus.lectureapplyservice.domain.lecture.exception.LectureAlreadyAppliedException
+import io.hhplus.lectureapplyservice.domain.lecture.exception.LectureFullException
 import io.hhplus.lectureapplyservice.domain.lecture.repository.LectureApplicationRepository
 import io.hhplus.lectureapplyservice.domain.lecture.repository.LectureRepository
 import io.hhplus.lectureapplyservice.domain.user.User
@@ -8,8 +10,8 @@ import io.hhplus.lectureapplyservice.domain.user.repository.UserRepository
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -58,21 +60,35 @@ class LectureApplicationServiceConcurrencyTest
                 }
 
                 val savedUsers = userRepository.saveAll(users)
+
                 val successfulApplications = AtomicInteger(0)
+                val failApplications = AtomicInteger(0)
 
                 `when`("applyForLecture를 호출될때") {
                     runBlocking {
                         (0..39).map { index ->
-                            withContext(Dispatchers.IO) {
-                                val result = lectureApplicationService.applyForLecture(savedLecture.id, savedUsers[index])
-                                if (result) successfulApplications.incrementAndGet()
+                            async(Dispatchers.IO) {
+                                val result =
+                                    runCatching {
+                                        lectureApplicationService.applyForLecture(savedLecture.id, savedUsers[index])
+                                    }
+
+                                result.onSuccess {
+                                    successfulApplications.incrementAndGet()
+                                }.onFailure { e ->
+                                    when (e) {
+                                        is LectureFullException -> failApplications.incrementAndGet()
+                                        else -> throw e // 다른 예외 처리
+                                    }
+                                }
                             }
-                        }
+                        }.forEach { it.await() }
                     }
                 }
 
                 then("30명만 성공한다.") {
                     successfulApplications.get() shouldBe 30
+                    failApplications.get() shouldBe 10
                 }
             }
 
@@ -96,20 +112,33 @@ class LectureApplicationServiceConcurrencyTest
                     )
 
                 val successfulApplications = AtomicInteger(0)
+                val failApplications = AtomicInteger(0)
 
                 `when`("applyForLecture를 호출될때") {
                     runBlocking {
                         (0..4).map {
-                            withContext(Dispatchers.IO) {
-                                val result = lectureApplicationService.applyForLecture(savedLecture.id, savedUser)
-                                if (result) successfulApplications.incrementAndGet()
+                            async(Dispatchers.IO) {
+                                val result =
+                                    runCatching {
+                                        lectureApplicationService.applyForLecture(savedLecture.id, savedUser)
+                                    }
+
+                                result.onSuccess {
+                                    successfulApplications.incrementAndGet()
+                                }.onFailure { e ->
+                                    when (e) {
+                                        is LectureAlreadyAppliedException -> failApplications.incrementAndGet()
+                                        else -> throw e // 다른 예외 처리
+                                    }
+                                }
                             }
-                        }
+                        }.forEach { it.await() }
                     }
                 }
 
                 then("1번만 성공한다.") {
                     successfulApplications.get() shouldBe 1
+                    failApplications.get() shouldBe 4
                 }
             }
         })

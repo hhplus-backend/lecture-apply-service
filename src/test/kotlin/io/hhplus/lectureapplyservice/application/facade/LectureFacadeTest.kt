@@ -2,14 +2,16 @@ package io.hhplus.lectureapplyservice.application.facade
 
 import io.hhplus.lectureapplyservice.application.dto.request.LectureSearchRequest
 import io.hhplus.lectureapplyservice.domain.lecture.Lecture
+import io.hhplus.lectureapplyservice.domain.lecture.exception.LectureAlreadyAppliedException
+import io.hhplus.lectureapplyservice.domain.lecture.exception.LectureFullException
 import io.hhplus.lectureapplyservice.domain.lecture.repository.LectureRepository
 import io.hhplus.lectureapplyservice.domain.user.User
 import io.hhplus.lectureapplyservice.domain.user.repository.UserRepository
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
@@ -88,11 +90,11 @@ class LectureFacadeTest
                 `when`("수강신청을 진행하면") {
                     runBlocking {
                         (0..29).map { index ->
-                            withContext(Dispatchers.IO) {
+                            async(Dispatchers.IO) {
                                 val result = lectureFacade.applyForLecture(savedLecture.id, savedUsers[index].id)
                                 if (result) successfulApplications.incrementAndGet()
                             }
-                        }
+                        }.forEach { it.await() }
                     }
                     then("30명 모두 성공한다.") {
                         successfulApplications.get() shouldBe 30
@@ -105,7 +107,6 @@ class LectureFacadeTest
                 for (i in 1..40) {
                     users.add(
                         User(
-                            id = i.toLong(),
                             name = "test$i",
                         ),
                     )
@@ -124,18 +125,31 @@ class LectureFacadeTest
                     )
 
                 val successfulApplications = AtomicInteger(0)
+                val failApplications = AtomicInteger(0)
 
                 `when`("수강신청을 진행하면") {
                     runBlocking {
                         (0..39).map { index ->
-                            withContext(Dispatchers.IO) {
-                                val result = lectureFacade.applyForLecture(savedLecture.id, savedUsers[index].id)
-                                if (result) successfulApplications.incrementAndGet()
+                            async(Dispatchers.IO) {
+                                val result =
+                                    kotlin.runCatching {
+                                        lectureFacade.applyForLecture(savedLecture.id, savedUsers[index].id)
+                                    }
+
+                                result.onSuccess {
+                                    successfulApplications.incrementAndGet()
+                                }.onFailure { e ->
+                                    when (e) {
+                                        is LectureFullException -> failApplications.incrementAndGet()
+                                        else -> throw e
+                                    }
+                                }
                             }
-                        }
+                        }.forEach { it.await() }
                     }
                     then("30명만 성공한다.") {
                         successfulApplications.get() shouldBe 30
+                        failApplications.get() shouldBe 10
                     }
                 }
             }
@@ -159,18 +173,30 @@ class LectureFacadeTest
                     )
 
                 val successfulApplications = AtomicInteger(0)
+                val failApplications = AtomicInteger(0)
 
                 `when`("수강신청을 진행하면") {
                     runBlocking {
-                        (0..39).map {
-                            withContext(Dispatchers.IO) {
-                                val result = lectureFacade.applyForLecture(savedLecture.id, savedUser.id)
-                                if (result) successfulApplications.incrementAndGet()
+                        (0..4).map {
+                            async(Dispatchers.IO) {
+                                val result =
+                                    runCatching {
+                                        lectureFacade.applyForLecture(savedLecture.id, savedUser.id)
+                                    }
+                                result.onSuccess {
+                                    successfulApplications.incrementAndGet()
+                                }.onFailure { e ->
+                                    when (e) {
+                                        is LectureAlreadyAppliedException -> failApplications.incrementAndGet()
+                                        else -> throw e
+                                    }
+                                }
                             }
-                        }
+                        }.forEach { it.await() }
                     }
                     then("1번만 성공한다.") {
                         successfulApplications.get() shouldBe 1
+                        failApplications.get() shouldBe 4
                     }
                 }
             }

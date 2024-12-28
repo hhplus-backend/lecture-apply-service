@@ -23,34 +23,22 @@ class LectureApplicationService(
         lectureId: Long,
         user: User,
     ): Boolean {
-        val lockAcquired = lectureRepository.getLock("lecture_$lectureId") == 1
-
-        if (lockAcquired) {
-            try {
-                val lecture = lectureRepository.getLectureById(lectureId)
-                if (!lecture.hasCapacity()) {
-                    throw LectureFullException(lecture.id)
-                }
-
-                if (lecture.hasUserApplied(user)) {
-                    throw LectureAlreadyAppliedException(user.id, lecture.id)
-                }
-
-                val lectureApplication =
-                    LectureApplication(
-                        lecture = lecture,
-                        participant = user,
-                    )
-                val savedLectureApplication = lectureApplicationRepository.save(lectureApplication)
-                return true
-            } catch (e: Exception) {
-                return false
-            } finally {
-                lectureRepository.releaseLock("lecture_$lectureId")
-            }
+        val lecture = lectureRepository.getLectureByIdWithLock(lectureId)
+        if (!lecture.hasCapacity()) {
+            throw LectureFullException(lecture.id)
         }
 
-        return false
+        if (lecture.hasUserApplied(user)) {
+            throw LectureAlreadyAppliedException(user.id, lecture.id)
+        }
+
+        val lectureApplication =
+            LectureApplication(
+                lecture = lecture,
+                participant = user,
+            )
+        val savedLectureApplication = lectureApplicationRepository.save(lectureApplication)
+        return true
     }
 
     fun getAppliedLectures(
