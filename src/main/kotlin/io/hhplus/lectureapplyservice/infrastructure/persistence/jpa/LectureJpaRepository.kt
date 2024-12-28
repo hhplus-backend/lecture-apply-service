@@ -19,13 +19,8 @@ interface LectureJpaRepository : JpaRepository<Lecture, Long> {
     @Query(value = "SELECT RELEASE_LOCK(:key)", nativeQuery = true)
     fun releaseLock(key: String): Int
 
-    @Query(
-        """
-        SELECT l FROM Lecture l
-        WHERE l.id = :lectureId FOR UPDATE
-        """, nativeQuery = true
-    )
-    @Lock(LockModeType.PESSIMISTIC_WRITE) // 비관적 락 적용
+    @Lock(LockModeType.PESSIMISTIC_WRITE) // 비관적 lock
+    @Query("SELECT l FROM Lecture l WHERE l.id = :lectureId")
     fun findLectureWithLock(@Param("lectureId") lectureId: Long): Optional<Lecture>
 
     @Query(
