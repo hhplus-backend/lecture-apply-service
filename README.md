@@ -103,6 +103,25 @@ fun applyForLecture(
 ### **`STEP 3`**
 - 서비스 수준의 동시성 테스트 : `LectureApplicationServiceConcurrencyTest`
 - 통합테스트 : `LectureFacadeTest`
+
+### **`STEP 4`**
+- 같은 사용자가 동일한 특강에 대해 신청 성공하지 못하도록 개선  
+    `lecture` 도메인에 특강을 신청했는지에 대한 여부를 확인 후 이미 해당 사용자가 신청한 특강이라면 exception을 발생하게하여 중복 신청 방지  
+    unique constraint를 사용한다면 db의존성이 생길 수 있기에 어플리케이션에서 해결.  
+```kotlin
+    fun hasUserApplied(user: User): Boolean {
+    lectureApplications.firstOrNull { it.participant.id == user.id }
+        ?: return false
+    throw LectureAlreadyAppliedException(user.id, id)
+} 
+```
+
+- 서비스 수준의 동시성 테스트 : `LectureApplicationServiceConcurrencyTest`
+- 통합테스트 : `LectureFacadeTest`
+ 
+
+- 동일한 유저 정보로 같은 특강을 5번 신청했을 때, 1번만 성공하는 것을 검증하는 **통합 테스트** 작성
+
 [ktlint]: https://github.com/JLLeitschuh/ktlint-gradle?tab=readme-ov-file#configuration
 
 [kotest]: https://kotest.io/docs/quickstart

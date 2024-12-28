@@ -65,7 +65,7 @@ class LectureFacadeTest
                 for (i in 1..30) {
                     users.add(
                         User(
-                            id = i.toLong(),
+//                    id = i.toLong(),
                             name = "test$i",
                         ),
                     )
@@ -136,6 +136,41 @@ class LectureFacadeTest
                     }
                     then("30명만 성공한다.") {
                         successfulApplications.get() shouldBe 30
+                    }
+                }
+            }
+
+            given("동일한 유저가 같은 특강을 5번 신청하였을 때") {
+                val savedUser =
+                    userRepository.save(
+                        User(
+                            name = "test-user",
+                        ),
+                    )
+
+                val savedLecture =
+                    lectureRepository.save(
+                        Lecture(
+                            id = 1L,
+                            name = "lecture-1",
+                            lecturer = "lecturer-1",
+                            lectureDate = LocalDate.now(fixedClock),
+                        ),
+                    )
+
+                val successfulApplications = AtomicInteger(0)
+
+                `when`("수강신청을 진행하면") {
+                    runBlocking {
+                        (0..39).map {
+                            withContext(Dispatchers.IO) {
+                                val result = lectureFacade.applyForLecture(savedLecture.id, savedUser.id)
+                                if (result) successfulApplications.incrementAndGet()
+                            }
+                        }
+                    }
+                    then("1번만 성공한다.") {
+                        successfulApplications.get() shouldBe 1
                     }
                 }
             }
